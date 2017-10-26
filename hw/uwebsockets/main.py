@@ -18,7 +18,7 @@ sta_if.connect("Lapikud", "wifiparool")
 while not sta_if.isconnected(): pass
 
 # Create object to turn on and off the pinout.
-pin_to_relay = Pin(0, Pin.OUT)
+pin_to_relay = Pin(2, Pin.OUT)
 
 # Save the socket address to string.
 uri = "ws://iot.wut.ee:80/ws/lap_esimene_lamp"
