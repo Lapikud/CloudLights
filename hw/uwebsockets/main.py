@@ -1,9 +1,25 @@
 """Main is in the game."""
 import network
 import sys
-import uwebsockets.client
 import uwebsockets.protocol
 from machine import Pin
+
+def toggle_light(pin_object):
+    """Toggle the light."""
+    print("Toggle used.")
+    if pin_object.value():
+        light_control_pin.off()
+
+    else:
+        light_control_pin.on()
+
+
+# Create Pin objects to turn on and off the pinout and read switch's state.
+light_control_pin = Pin(2, Pin.OUT)
+switch_input_pin = Pin(0, Pin.IN)
+
+# Assign callback function to switch_input_pin.
+switch_input_pin.irq(trigger=Pin.IRQ_RISING | Pin.IRQ_FALLING, handler=toggle_light)
 
 # Create station and access point interfaces.
 sta_if = network.WLAN(network.STA_IF)
@@ -17,9 +33,6 @@ ap_if.active(False)
 sta_if.connect("Lapikud", "wifiparool")
 while not sta_if.isconnected(): pass
 
-# Create object to turn on and off the pinout.
-pin_to_relay = Pin(2, Pin.OUT)
-
 # Save the socket address to string.
 uri = "ws://iot.wut.ee:80/ws/lap_esimene_lamp"
 
@@ -27,6 +40,7 @@ uri = "ws://iot.wut.ee:80/ws/lap_esimene_lamp"
 print("I shall try to acquire a channel of communication:\n", uri)
 light1_web_socket = uwebsockets.client.connect(uri)
 light1_web_socket.send("I am foremost pleased to meet you.")
+
 
 # Keep updating the lamp state forever.
 while True:
@@ -39,15 +53,15 @@ while True:
     # Update the pinout.
     # Turn light on.
     if data == "1":
-        pin_to_relay.on()
+        light_control_pin.on()
 
     # Turn light off.
     elif data == "0":
-        pin_to_relay.off()
+        light_control_pin.off()
 
     # Send state to websocket.
     elif data == "?":
-        light1_web_socket.send(str(pin_to_relay.value()))
+        light1_web_socket.send(str(light_control_pin.value()))
 
     # Do nothing.
     else:
