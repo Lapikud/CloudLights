@@ -2,21 +2,32 @@
 import network
 import sys
 import uwebsockets.protocol
+import uwebsockets.client
+
+from machine import reset
 from machine import Pin
+
+light1_web_socket = None
+
+def send_state():
+    if light1_web_socket:
+        light1_web_socket.send(str(light_control_pin.value()))
+    else:
+        print("No socket found.")
 
 def toggle_light(pin_object):
     """Toggle the light."""
     print("Toggle used.")
     if pin_object.value():
         light_control_pin.off()
-
     else:
         light_control_pin.on()
-
+    send_state()
+    
 
 # Create Pin objects to turn on and off the pinout and read switch's state.
-light_control_pin = Pin(2, Pin.OUT)
-switch_input_pin = Pin(0, Pin.IN)
+light_control_pin = Pin(4, Pin.OUT)
+switch_input_pin = Pin(5, Pin.IN, Pin.PULL_UP)
 
 # Assign callback function to switch_input_pin.
 switch_input_pin.irq(trigger=Pin.IRQ_RISING | Pin.IRQ_FALLING, handler=toggle_light)
@@ -61,7 +72,7 @@ while True:
 
     # Send state to websocket.
     elif data == "?":
-        light1_web_socket.send(str(light_control_pin.value()))
+        send_state()
 
     # Do nothing.
     else:
